@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WPU Biology Policy Assistant</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@300;400;500;600&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red: #8b1a1a;
+    --red-dark: #6a1212;
+    --red-light: #c04040;
+    --orange-accent: #d4601a;
+    --cream: #faf8f3;
+    --white: #ffffff;
+    --gray: #6b7280;
+    --light-gray: #f5f0e8;
+    --border: #e0d5c5;
+    --shadow: 0 4px 24px rgba(139,26,26,0.10);
+  }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background: var(--cream);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+  }
+
+  /* Header */
+  .header {
+    width: 100%;
+    background: var(--red);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 3px solid var(--orange-accent);
+    box-shadow: 0 2px 16px rgba(139,26,26,0.22);
+  }
+
+  .header-icon {
+    width: 46px;
+    height: 46px;
+    background: var(--orange-accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .header-text h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    color: var(--white);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  .header-text p {
+    font-size: 0.78rem;
+    color: #f5c5a0;
+    font-weight: 300;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  /* Chat container */
+  .chat-wrap {
+    width: 100%;
+    max-width: 760px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0 16px;
+  }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px 0 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-height: 0;
+  }
+
+  /* Welcome card */
+  .welcome-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--orange-accent);
+    border-radius: 12px;
+    padding: 22px 24px;
+    box-shadow: var(--shadow);
+  }
+
+  .welcome-card h2 {
+    font-family: 'Playfair Display', serif;
+    color: var(--red);
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+
+  .welcome-card p {
+    color: var(--gray);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chip {
+    background: var(--light-gray);
+    border: 1px solid var(--border);
+    color: var(--red-dark);
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: 'Source Sans 3', sans-serif;
+    font-weight: 500;
+    transition: all 0.18s;
+  }
+
+  .chip:hover {
+    background: var(--red);
+    color: #f5c5a0;
+    border-color: var(--red);
+  }
+
+  /* Messages */
+  .msg {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    animation: fadeUp 0.28s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg.user { flex-direction: row-reverse; }
+
+  .avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .msg.bot .avatar  { background: var(--red); }
+  .msg.user .avatar { background: var(--orange-accent); }
+
+  .bubble {
+    max-width: 82%;
+    padding: 13px 17px;
+    border-radius: 14px;
+    font-size: 0.93rem;
+    line-height: 1.65;
+    box-shadow: 0 2px 8px rgba(139,26,26,0.07);
+  }
+
+  .msg.bot .bubble {
+    background: var(--white);
+    color: #222;
+    border: 1px solid var(--border);
+    border-top-left-radius: 4px;
+  }
+
+  .msg.user .bubble {
+    background: var(--red);
+    color: var(--white);
+    border-top-right-radius: 4px;
+  }
+
+  /* Typing indicator */
+  .typing-dots {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    padding: 4px 0;
+  }
+
+  .typing-dots span {
+    width: 8px;
+    height: 8px;
+    background: var(--orange-accent);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+
+  .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-7px); }
+  }
+
+  /* Input area */
+  .input-area {
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    padding: 14px 0 20px;
+    position: sticky;
+    bottom: 0;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  textarea {
+    flex: 1;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.93rem;
+    color: var(--red-dark);
+    resize: none;
+    outline: none;
+    background: var(--cream);
+    min-height: 44px;
+    max-height: 120px;
+    transition: border-color 0.18s;
+    line-height: 1.5;
+  }
+
+  textarea:focus {
+    border-color: var(--orange-accent);
+    background: var(--white);
+  }
+
+  textarea::placeholder { color: #aaa; }
+
+  button.send-btn {
+    width: 44px;
+    height: 44px;
+    background: var(--red);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.18s, transform 0.1s;
+    flex-shrink: 0;
+  }
+
+  button.send-btn:hover { background: var(--orange-accent); }
+  button.send-btn:active { transform: scale(0.95); }
+  button.send-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+  button.send-btn svg { width: 20px; height: 20px; fill: white; }
+
+  .disclaimer {
+    font-size: 0.72rem;
+    color: #bbb;
+    text-align: center;
+    margin-top: 8px;
+    font-style: italic;
+  }
+
+  @media (max-width: 600px) {
+    .header { padding: 14px 16px; }
+    .bubble { max-width: 90%; font-size: 0.88rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">🔬</div>
+  <div class="header-text">
+    <h1>WPU Biology Policy Assistant</h1>
+    <p>Department of Biology · Student Handbook 2013</p>
+  </div>
+</div>
+
+<div class="chat-wrap">
+  <div class="messages" id="messages">
+    <div class="welcome-card">
+      <h2>Welcome, Biology Student 🧬</h2>
+      <p>Ask me anything about the William Paterson University Department of Biology Student Handbook — degree requirements, GPA rules, core courses, research opportunities, scholarships, pre-professional programs, and more.</p>
+      <div class="chips" id="chips">
+        <button class="chip" onclick="askChip(this)">What GPA do I need to graduate?</button>
+        <button class="chip" onclick="askChip(this)">What are the core courses?</button>
+        <button class="chip" onclick="askChip(this)">Can I repeat a failed course?</button>
+        <button class="chip" onclick="askChip(this)">How do I get research experience?</button>
+        <button class="chip" onclick="askChip(this)">What scholarships are available?</button>
+        <button class="chip" onclick="askChip(this)">Pre-PA or Pre-PT program info</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-row">
+      <textarea id="userInput" rows="1" placeholder="Ask about a biology department policy…" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+        <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+      </button>
+    </div>
+    <div class="disclaimer">Answers are based solely on the WPU Department of Biology Student Handbook (edited March 13, 2013).</div>
+  </div>
+</div>
+
+<script>
+const SYSTEM_PROMPT = `You are a helpful policy assistant for the William Paterson University (WPU) Department of Biology. You ONLY answer questions based on the WPU Department of Biology Student Handbook (edited March 13, 2013).
+
+Here is the full content of the handbook:
+
+DEPARTMENT CHAIR & CONTACT INFO
+- Chairperson: Dr. Lance Risley, SciE 4064, x3438, risleyl@wpunj.edu
+- Assistant Chairperson: Dr. Stephen Vail, SciE 4041, x2487, vails@wpunj.edu
+- Secretary: Nancy Malba, SciE 4064, x2265, malban@wpunj.edu
+- Secretary: Georgeann Russo, SciE 4064, x2245, russog@wpunj.edu
+- Department website: http://www.wpunj.edu/cosh/departments/biology
+
+IMPORTANT CAMPUS PHONE NUMBERS
+- Advisement Center: x2727
+- Registrar: x2700
+- Bursar: x3695
+- Academic Support Center: x3324
+- Science Enrichment Center: x3340
+- Financial Aid: x2202
+- Student Information Center: x2292
+- WPU Campus Police: x2300
+
+MISSION STATEMENT
+The Department of Biology offers intellectually challenging programs leading to Bachelor and Master of Science degrees in biology and biotechnology. Programs prepare students for careers in teaching, scientific research, medicine, allied-health professions, technical careers in the biomedical/pharmaceutical industry, and science administration and regulatory jobs in government.
+
+STUDENT LEARNING OUTCOMES
+Students graduating with a biology degree will be able to demonstrate fundamental understanding of basic biological concepts, communicate these concepts orally and in writing, formulate sound hypotheses, design experiments, collect and analyze biological data, and come to logical conclusions.
+
+DEGREE PROGRAMS
+- B.S. in Biology (General, Physiology & Behavior, or Ecology concentrations)
+- B.S. in Biotechnology
+- Minor in Biology
+- Pre-Professional programs (Pre-Med, Pre-PA, Pre-PT, Pre-Dental, Pre-Vet, etc.)
+
+MINIMUM GPA REQUIREMENT
+All Biology Majors must maintain an Overall GPA of 2.0 or above in all major courses to graduate with a BS in Biology/Biotechnology.
+- GPA scale: A=4.0, A-=3.7, B+=3.3, B=3.0, B-=2.7, C+=2.3, C=2.0, C-=1.7, D+=1.3, D=1.0, F=0, P=not included
+- Courses retaken: only the last grade counts in your GPA
+- All repeat courses MUST be taken at WPUNJ or the prior grade will still count
+
+BIOLOGY CORE-COURSE RULES
+A) Core Course C- Rule (applies to both Biology and Biotechnology majors):
+- Core courses for BS Biology: BIO 1630, 1640, 2060, 2490, and BIO 2050
+- Core courses for BS Biotechnology: BIO 1630, 2050, and 2060
+- BIO 1120 and 1130 count as core courses if used to fulfill BIO 1640 requirement (for PT or PA career paths)
+- If a student receives a grade below C- in a core course: they did NOT meet grade requirements; they cannot proceed to sequential courses or graduate until they earn C- or better; if already registered for a sequential course, they will be automatically dropped by the Registrar.
+
+B) Biology Pre-requisite Rule:
+- Beginning Spring 2010: all biology and biotechnology majors must successfully complete (C- or better) all core courses before progressing to upper-level biology courses (3000 and above).
+
+BIOLOGY MAJOR REQUIREMENTS
+Students take 33-35 credits in Biology plus 31-32 credits in co-requisites (Chemistry 16 cr., Physics 8 cr., Mathematics 8 cr.).
+
+Biology Core Courses:
+- BIO 1630 General Biology I
+- BIO 1640 General Biology II
+- BIO 2050 Cell Biology
+- BIO 2060 Genetics
+- BIO 2490 Ecology, Evolution & Behavior
+
+Co-Requirements (all concentrations):
+- CHEM 1600/1610 General Chemistry I & II
+- CHEM 2510/2520 & labs Organic Chemistry I & II
+- PHYS 2560 College Physics II or PHYS 2610 General Physics II
+- MATH 1610 Calculus II OR MATH 2300 Statistics OR MATH 3720 Math Models in Biological Science
+
+Students must earn at least a C- in all 5 Biology Core courses before taking any upper-level Biology courses.
+
+BIOLOGY CONCENTRATIONS
+General Concentration:
+- Select one Plant course: BIO 3610, BIO 3630, or BIO 3650
+- Biology Electives: 3 courses, 3000 level or above (3-4 cr.), at least one must be 4 credit
+- BIO 4800 Biology Seminar or BIO 4990 Independent Study
+
+Physiology & Behavior Concentration:
+- BIO 3500 Animal Behavior
+- BIO 3080 Animal Physiology
+- Biology Electives: 2 courses, 3000 level or above (3-4 cr.), at least one must be 4 credit
+- BIO 4800 Biology Seminar or BIO 4990 Independent Study
+
+Ecology Concentration:
+- BIO 3630 Terrestrial Plant Ecology
+- BIO 3400 General Ecology
+- Ecology Elective: 1 course, 3000 level or above (3-4 cr.)
+- Biology Elective: 1 course, 3000 level or above (3-4 cr.)
+- BIO 4800 Biology Seminar or BIO 4990 Independent Study
+
+NOTE: A student in any biology concentration must complete a minimum of TWO laboratory courses at the 3000 level or above to graduate.
+
+BIOTECHNOLOGY MAJOR REQUIREMENTS
+Biotech Core (9 credits): BIO 1630, BIO 2050, BIO 2060
+Biotech Upper Level Coursework (23-25 credits): BIO 3200 Microbiology, BIO 5240 Molecular Biology, BIO 5300 Biotechnology: DNA, BIO 5310 Biotechnology: Cell Culture, BIO 4800 Biology Seminar or BIO 4990 Independent Study, and one of: BIO 3610 General Botany
+Co-Requirements (28 credits): CHEM 1600, 1610, 2510, 2520, CHEM 4270 Biochemistry, PHYS 2560 or PHYS 2610, one of MATH 1610/2300/3720
+Students must earn a C- in all Biotech Core courses.
+
+UNIVERSITY CORE CURRICULUM (UCC)
+The UCC is approximately 40 credits and constitutes one third of the undergraduate curriculum. Students choose 13 courses from 6 areas of study. Students may use up to 3 courses in their major to fulfill UCC requirements.
+- Must complete 18 credits in Areas 1-3 before taking Area 4
+- Must complete Area 4 before taking Areas 5 and 6
+- Writing Intensive (WI): 4 courses required (first must be College Writing in Area 2; at least one must be 3000 level or above)
+- Technology Intensive (TI): 2 courses required
+- Foreign Language: 6 credits required
+
+BIOLOGY ELECTIVE COURSES (3000 level and above)
+BIO 3080 Animal Physiology (4), BIO 3180 Invertebrate Zoology (4), BIO 3200 Microbiology (4), BIO 3330 Field Entomology (4), BIO 3350 Field Botany (3), BIO 3400 General Ecology (4), BIO 3450 Conservation Biology (3), BIO 3500 Animal Behavior (3), BIO 3610 General Botany (4), BIO 3630 Terrestrial Plant Ecology (4), BIO 3650 Plant Physiology (4), BIO 3990 Selected Topics (1-6), BIO 4020 Aquatic Ecology (4), BIO 4110 Human Reproduction (4), BIO 4160 Comparative Animal Physiology (4), BIO 4170 Histology (4), BIO 4210 Developmental Biology (4), BIO 4440 Evolution (3), BIO 4600 Pharmacology (3), BIO 4700 Bioethics and Society (3), BIO 4840 Scanning Electron Microscopy (4), BIO 4850 Transmission Electron Microscopy (4), BIPY 4740 Neuroscience (4), BIPY 4750 Behavior Genetics (4), BIPY 4900 Human Neuropsychology (3), CHEM 4270 Biochemistry I (4).
+Note: Junior and senior biology majors may take graduate (5000-level) courses with permission of instructor, Department chair, and Dean. GPA of 3.0 required. Plant electives (in orange in handbook): BIO 3610, 3630, 3650.
+
+ADVANCED PLACEMENT CREDIT
+Students who scored a minimum of 50 on the Advanced Biology AP exam will be granted 4 credits for General Biology I (BIO 1630). Total credits required for graduation remain the same.
+
+MINOR IN BIOLOGY
+Required courses: BIO 1630, 1640, 2050, 2060 and 2490 = 20 credits total.
+One year of Chemistry and Precalculus are strongly recommended.
+
+TRANSFER STUDENTS
+- From within the University: must follow all degree rules; may substitute BIO 1120/1130 for BIO 1640; may substitute BIO 1700 for BIO 3200.
+- With undergraduate credits (no bachelor's degree): must complete minimum 30 credits at WPUNJ with minimum 5 biology courses (at least 3 with lab).
+- With AA or AS from NJ Community College: automatically receive UCC credit; check major courses carefully.
+- Second Degree students: minimum 30 credits at WPUNJ, at least 50% of biology major, all co-requisites unless previously completed.
+
+ACADEMIC ADVISEMENT
+Each student is assigned a faculty advisor. Students are expected to consult their advisor each semester, at least before registration. To change advisor, contact Dr. Risley in SciE 4064.
+
+STUDENT RESEARCH OPPORTUNITIES
+- Independent Study: Juniors and seniors can earn degree credits for research with a faculty mentor. Minimum 3.0 GPA required. Students submit a project proposal.
+- GS-LSAMP-MAPS: Led by Dr. Danielle Desroches; provides support and financial aid for minority students in summer research internships.
+- Summer Experience Program: Places students in off-campus summer research positions (local, national, international). Contact Dr. Lance Risley (out-of-state) or Dr. Claire Leonard (in-state/corporate internships). Duration: 2-16 weeks, May-August.
+- Center for Research (CfR): Established by College of Science and Health; provides funding for summer research and stipends. Competitive grants for both faculty and students.
+- SURP (Student Undergraduate Research Program): Sponsored by Provost's Office; awards up to $2000 for undergraduate research projects (equipment, supplies, travel). Apply in cooperation with a faculty mentor.
+
+SCIENCE ENRICHMENT CENTER
+Location: Science East 3054. Contact: Donna Potacco, X3340, potaccod@wpunj.edu.
+Open to all students. Services include: academic assistance (tutoring, exam review, study groups), laboratory equipment, reference materials, test bank, computer lab, audio-visual materials, and workshops.
+
+NEW JERSEY N-12 TEACHING CERTIFICATION
+Contact College of Education at the beginning of sophomore year (after 30 earned credits). Students planning this route should choose the General Biology Concentration.
+
+HONORS PROGRAMS
+Seven specific honors tracks are available. Most related to biology: Biopsychology (contact Dr. Robert Benno, x3440). Contact Honors College Office, Raubinger Hall, Extension 3658.
+
+PRE-PROFESSIONAL PROGRAMS
+Contact: Dr. Claire Leonard, x2791, leonardc@wpunj.edu. Pre-Professional Committee advises on course selection, writes letters of recommendation, gives mock interviews, and facilitates applications. Over the past five years 80% of students who applied to professional schools have been accepted. Prepares students for: Medicine, Dentistry, Veterinary Medicine, Chiropractic, Podiatry, Optometry, Pharmacy, Physical Therapy, and Physician Assistant.
+
+WPUNJ/UMDNJ 3+3 PRE-PHYSICAL THERAPY PROGRAM
+6-year joint program: BS in Biology from WPUNJ + Doctor of Physical Therapy (DPT) from UMDNJ.
+Students spend 3 years (83.5 credits) at WPUNJ.
+Major Science & Math courses required (40 credits): General Chemistry I & II (CHEM 1600, 1610), General Anatomy & Physiology I & II (BIO 1120, 1130), College Physics I & II (PHYS 2550, 2560), Calculus I (MATH 1600), Statistics (MATH 2300), General Biology I (BIO 1630), Genetics (BIO 2060).
+GPA requirement: at least 3.0 (3.3 preferred). Admission NOT guaranteed.
+At least 30 of 83.5 total credits must be completed at WPU; half of major courses (20 of 40 credits), including at least 8 credits of biology.
+
+WPUNJ/UMDNJ 3+3 PRE-PHYSICIAN ASSISTANT PROGRAM
+6-year joint program: BS Biology from WPUNJ + MS Physician Assistant from UMDNJ.
+Students spend 3 years (92.5 credits) at WPUNJ.
+Major Science & Math courses required (52 credits): BIO 1120, 1130, 1630, 2050, 2060; CHEM 1600, 1610, 2510, 2520; PHYS 2550, 2560; MATH 1600, 2300.
+GPA requirement: minimum 3.0.
+Applications submitted directly to PA Program by June 1 at end of sophomore year.
+Approximately 50 slots available at UMDNJ each year.
+If applicant applies at end of junior year, they are ineligible for the 3+3 program.
+After 92.5 credits at WPU, 44 more credits at UMDNJ = 136.5 for BS degree.
+UMDNJ contact: Rebecca Santiago, santanre@umdnj.edu.
+
+ACADEMIC INTEGRITY POLICY
+Violations include: cheating, plagiarism, collusion, lying, computer security breaches, stolen tests, falsified records, vandalism.
+Resolution process:
+1. Faculty discusses with student within 10 working days of incident.
+2. If student accepts penalty, they waive right to a hearing. Possible penalties: resubmission, assignment failure, course failure, forced withdrawal, suspension/expulsion.
+3. If student disagrees: speak to faculty within 10 working days; if unresolved, contact department chairperson; if unresolved, Department Executive Council hears the appeal; if still unresolved, College Council makes final decision.
+Each step must be initiated within 10 working days of response.
+
+PASS/FAIL POLICY
+- Maximum 1 course (3-4 credits) may be taken Pass/Fail per semester
+- Maximum 12 credits Pass/Fail in entire academic career
+- Only FREE ELECTIVE courses may be taken P/F; major and co-requirements cannot be taken P/F
+- Must complete Pass/Fail contract at the Registrar's Office before deadline
+- Once submitted, cannot be reversed
+- If F is earned in a P/F course, it IS calculated into GPA
+- Second degree students may NOT take courses P/F
+
+GRADE DEFINITIONS
+A=Excellent, B=Good, C=Satisfactory, D=Minimally passing, F=Failing, P=Passed (P/F, equivalent to A-D), S=Satisfactory (Basic Skills, no graduation credit), In=Incomplete, N=Unacceptable (must repeat), M=Missing/no grade submitted, WD=Withdrawn Officially, AU=Audit.
+Note: A "PASS" may not always transfer to another college.
+
+REPEAT COURSE POLICY
+- Students may repeat a course with D+ or D once. A grade of F may be repeated only twice.
+- Biology and Biotechnology Core courses can only be repeated ONCE.
+- Maximum repeats per course: 2.
+- Only the last grade is computed in GPA; all grades appear on transcript.
+- A P/F course being repeated may only be taken P/F if originally taken P/F.
+- Course substitutions are not permitted.
+- Students must be registered and have paid for the repeated course.
+
+LEAVE OF ABSENCE / WITHDRAWAL
+See: http://www.wpunj.edu/registrar/academic-regulations/leave.dot
+
+SCHOLARSHIPS AND AWARDS
+1. ISSBB Scholarship (Improving Student Success in Biology and Biotechnology): 20-25 scholarships from NSF, max $10,000/year. Must be full-time Biology or Biotechnology BS major, U.S. citizen/permanent resident/refugee, submit FAFSA, provide 2 letters of recommendation (one from science/math/tech instructor), write personal statement. Renewable up to 4 years with GPA of 2.8 in science/math and cumulative 3.0+. Contact: Dr. Eileen Gardner, 973/720-3441.
+
+2. Robert Noyce Teacher Scholarship: Up to $10,000/year for up to 2 years for students planning to teach science/math in high-need schools. Must be enrolled in Science or Math major AND Education major, have 60 credits with 15 toward major, overall GPA 2.8 at WPUNJ, U.S. citizen/permanent resident, file FAFSA, commit to 2 years teaching in USDOE designated high-need school. Contact: Dr. Eileen Gardner, gardnere@wpunj.edu.
+
+3. C. Kent Warner Scholarship: Max 5 scholarships at $1,000 each annually. Must be officially registered as undergraduate Biology or Biotechnology major; full-time (at least 12 credits); sophomore or above (minimum 24 credits) and have completed General Biology I and/or II; GPA of at least 3.0. Credited toward spring tuition. Applications available at Biology Office, SciE 4064, in February.
+
+GRADUATION AWARDS
+1. Outstanding Senior Award: Relatively high academic standing (not necessarily highest).
+2. C. Kent Warner Award: High academic standing + contributions to the Department, College, and University.
+3. Biology Faculty Award: Academic excellence despite severe obstacles and hardships.
+4. Undergraduate Research Award: Best research project by an undergraduate.
+5. Capstone Award: High score on ETS Capstone exam.
+
+BIOLOGY HONOR SOCIETY (Beta Beta Beta)
+Chi Rho Chapter. Advisor: Dr. Robert Chesney, SciE 4051, 973/720-3455. Founded 1922; WPU Chapter since 1986. Based on achievement in Biology and overall academic performance. Invitations extended in spring primarily to Juniors and Seniors; outstanding sophomores may also be invited.
+
+JOB OPPORTUNITIES
+Students may work as paid Student Assistants (up to 20 hours/week) in office or as Lab Assistants. Contact Financial Aid Office, x2203.
+
+BIOLOGY ALUMNI
+70-80% of Biology/Biotechnology graduates who apply to professional/graduate degree programs are accepted immediately upon graduation. Alumni newsletter: BIO ALUMNI NEWS. Facebook: BioWilliamPaterson.
+
+CAREERS IN BIOLOGY
+- Bachelor's Degree: Research scientist, lab technician, teacher, science writer, pharmaceutical sales, park ranger, museum curator, and more.
+- Master's Degree: Teaching, research, exercise physiology, conservation science, medical librarian, and more.
+- Professional Schools: Medicine, Dentistry, Veterinary Medicine, Pharmacy, Optometry, etc.
+- PhD: College professor, senior research scientist, forensic scientist, and more.
+- Additional 1-2 Year Programs: Physical therapy, occupational therapy, physician assistant, genetic counselor.
+
+LABORATORIES AND EQUIPMENT
+Located in the 232,000 sq. ft. Science Complex (opened 2012). Facilities include: animal facility, neurobiology lab, confocal and electron microscopy (SEM and TEM), biotechnology/tissue culture lab (PCR, electrophoresis, UV spectrophotometers, HPLC, ultracentrifuges), greenhouse, ecology lab. Campus includes forest, streams, a waterfall, and three ponds. Adjacent 1,000 acres of protected forest (largest undeveloped forest in NY Metro area). Oldham Pond (26.5 acres, donated by Bayer Corporation 1998).
+
+---
+
+When answering:
+- Be clear, helpful, and specific.
+- Reference relevant sections of the handbook when appropriate.
+- If something is not covered in the handbook, say so and suggest the student contact the Department of Biology at 973-720-3438 or visit SciE 4064.
+- Use bullet points or numbered lists when presenting multiple requirements.
+- Keep answers concise but complete.`;
+
+const messages = [];
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function askChip(btn) {
+  document.getElementById('userInput').value = btn.textContent;
+  sendMessage();
+}
+
+function appendMsg(role, text) {
+  const container = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar';
+  avatar.textContent = role === 'bot' ? '🔬' : '👤';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.innerHTML = text.replace(/\n/g, '<br>');
+
+  div.appendChild(avatar);
+  div.appendChild(bubble);
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return bubble;
+}
+
+function showTyping() {
+  const container = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg bot';
+  div.id = 'typing-indicator';
+
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar';
+  avatar.textContent = '🔬';
+
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  bubble.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+
+  div.appendChild(avatar);
+  div.appendChild(bubble);
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('userInput');
+  const btn = document.getElementById('sendBtn');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const chips = document.getElementById('chips');
+  if (chips) chips.style.display = 'none';
+
+  appendMsg('user', text);
+  messages.push({ role: 'user', content: text });
+
+  input.value = '';
+  input.style.height = 'auto';
+  btn.disabled = true;
+  showTyping();
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        messages: messages
+      })
+    });
+
+    const data = await response.json();
+    const reply = data.content?.[0]?.text || 'Sorry, I could not retrieve a response. Please try again.';
+
+    removeTyping();
+    appendMsg('bot', reply);
+    messages.push({ role: 'assistant', content: reply });
+
+  } catch (err) {
+    removeTyping();
+    appendMsg('bot', 'There was an error connecting to the assistant. Please check your connection and try again.');
+  }
+
+  btn.disabled = false;
+  input.focus();
+}
+</script>
+</body>
+</html>
